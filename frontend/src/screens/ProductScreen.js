@@ -2,34 +2,38 @@ import React,{ useState,useEffect } from 'react'
 import { Link,useParams } from 'react-router-dom'
 import { Row,Col,Image,ListGroup,Button,Card } from 'react-bootstrap'
 import Rating from '../components/Rating'
-import axios from 'axios'
+import Loader from '../components/Loader'
+import Message from '../components/Message'
+import { useDispatch,useSelector } from 'react-redux'
+import { listProductDeatils } from '../actions/productActions'
 
-function ProductScreen() {
-  const { id } = useParams();
 
-  const [product, setProduct] = useState(null)  // null instead of []
+function ProductScreen({match}) {
+  // const { id } = useParams();
+
+  // const [product, setProduct] = useState(null)  // null instead of []
+  const { id } = useParams(); // this replaces match.params.id
+  const dispatch = useDispatch();
+  const productDeatils=useSelector(state => state.productDeatils)
+  const {loading, error, product} = productDeatils
 
   useEffect(() => {
-    async function fetchProduct() {
-      try {
-        const { data } = await axios.get(`/api/products/${id}`)
-        setProduct(data)
-      } catch (error) {
-        console.error("Failed to fetch product:", error)
-      }
-    }
-
-    fetchProduct()
-  }, [id])
+    dispatch(listProductDeatils(id));
+  }, [dispatch, id]);
 
   if (!product) {
     return <h2>Loading product details...</h2>
   }
 
   return (
-    <div>
-      <Link to='/' className='btn btn-light my-3'>Go Back</Link>
-      <Row>
+        <div>
+            <Link to='/' className='btn btn-light my-3'>Go Back</Link>
+            {loading ?
+                <Loader />
+                : error
+                    ? <Message variant='danger'>{error}</Message>
+                    : (
+          <Row>
         <Col md={6}>
           <Image src={product.image} alt={product.name} fluid />
         </Col>
@@ -82,6 +86,8 @@ function ProductScreen() {
           </Card>
         </Col>
       </Row>
+        )
+      }
     </div>
   )
 }
